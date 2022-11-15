@@ -221,6 +221,43 @@
           "minimum": 1
         }
       }
+    },
+    "wifi": {
+      "description": "status of the WiFi subsystm",
+      "type": "object",
+      "required": [
+        "SSID",
+        "stations"
+      ],
+      "properties": {
+        "SSID": {
+          "description": "SSID",
+          "type": "string"
+        },
+        "stations": {
+          "description": "connected stations",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "MAC"
+            ],
+            "properties": {
+              "MAC": { "type": "string" },
+              "IP": { "type": "string" },
+              "hostname": { "type": "string" },
+              "link": {
+                "description": "link speed in bps",
+                "type": "number"
+              },
+              "signal": {
+                "description": "signal attenuation in dBm",
+                "type": "number"
+              }
+            }
+          }
+        }
+      }
     }
   },
   "$defs": {
