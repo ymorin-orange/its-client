@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":[["Action",""]],"struct":[["Connection","Represents a connection between lanes"],["Lane",""],["MAPExtendedMessage","MAPEM representation"]]};
