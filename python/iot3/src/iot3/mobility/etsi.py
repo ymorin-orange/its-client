@@ -181,3 +181,32 @@ def etsi2unix_time(
              precision).
     """
     return etsi2si(value, etsi.ETSI.MILLI_SECOND, 0) + ETSI.EPOCH
+
+
+class Message:
+    class StationType(enum.IntEnum):
+        # We need those values to *exactly* match those defined in the spec
+        unknown = 0
+        pedestrian = 1
+        cyclist = 2
+        moped = 3
+        motorcycle = 4
+        passengerCar = 5
+        bus = 6
+        lightTruck = 7
+        heavyTruck = 8
+        trailer = 9
+        specialVehicles = 10
+        tram = 11
+        roadSideUnit = 15
+
+    @staticmethod
+    def station_id(uuid: str) -> int:
+        return int(
+            hashlib.sha256(uuid.encode()).hexdigest()[:6],
+            16,
+        )
+
+    def to_json(self) -> str:
+        # Return the densest possible JSON sentence
+        return json.dumps(self.message, separators=(",", ":"))
