@@ -135,6 +135,7 @@ def main():
             "host": cfg["broker.main"]["host"],
             "port": int(cfg["broker.main"]["port"]),
             "tls": cfg["broker.main"]["tls"],
+            "websocket_path": cfg["broker.main"].get("websocket-path"),
         }
     else:
         conn_opts = {
