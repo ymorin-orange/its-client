@@ -25,6 +25,7 @@ class MqttClient:
         client_id: str,
         host: Optional[str] = None,
         port: Optional[int] = None,
+        websocket_path: Optional[str] = None,
         socket_path: Optional[str] = None,
         tls: Optional[bool] = None,
         username: Optional[str] = None,
@@ -39,6 +40,8 @@ class MqttClient:
         :param client_id: The MQTT client ID to identify as.
         :param host: The host name (or IP) of the MQTT broker.
         :param port: The port the MQTT broker listens on.
+        :param websocket_path: The path of the websocket the broker is
+                               reachable at.
         :param socket_path: The path of the UNIX socket.
         :param tls: Whether to use TLS or not. See below for details.
         :param username: The username to authenticate against the MQTT broker.
@@ -52,11 +55,14 @@ class MqttClient:
 
         There are two ways to connect to the MQTT broker:
          * via TCP: both host and port must be specified;
+         * via websockets: all of host, port, and websocket_path must
+           be specified;
          * via UNIX socket (only for local broker): socket_path must
            be specified.
 
         If socket_path is specified, then a connection through the UNIX
-        socket is used, otherwise a TCP connection is used.
+        socket is used; if websocket_path is specified, then a websocket
+        connection is used; otherwise a TCP connection is used.
 
         If tls is not specified, then a heuristic will be made: if the
         port is the default well-known clear port, 1883, then the
@@ -99,10 +105,12 @@ class MqttClient:
             self.port = 1
             self.name = socket_path
         else:
-            transport = "tcp"
+            transport = "websockets" if websocket_path else "tcp"
             self.host = host
             self.port = port
-            self.name = f"{host}:{port}"
+            self.name = (
+                f"{host}:{port}" + f"/{websocket_path}" if websocket_path else ""
+            )
 
         self.span_ctxmgr_cb = span_ctxmgr_cb
 
@@ -112,11 +120,13 @@ class MqttClient:
             protocol=paho.mqtt.client.MQTTv5,
             transport=transport,
         )
-        if transport == "tcp":
+        if transport in ["tcp", "websockets"]:
             if tls is None:
                 tls = port != 1883
             if tls:
                 self.client.tls_set()
+        if transport == "websockets":
+            self.client.ws_set_options(path=websocket_path)
 
         self.client.reconnect_delay_set(min_delay=1, max_delay=2)
         self.client.username_pw_set(username, password)
