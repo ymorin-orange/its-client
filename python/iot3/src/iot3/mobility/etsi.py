@@ -183,3 +183,57 @@ def etsi2unix_time(
              precision).
     """
     return etsi2si(value, etsi.ETSI.MILLI_SECOND, 0) + ETSI.EPOCH
+
+
+class Message(abc.ABC):
+    class StationType(enum.IntEnum):
+        # We need those values to *exactly* match those defined in the spec
+        unknown = 0
+        pedestrian = 1
+        cyclist = 2
+        moped = 3
+        motorcycle = 4
+        passengerCar = 5
+        bus = 6
+        lightTruck = 7
+        heavyTruck = 8
+        trailer = 9
+        specialVehicles = 10
+        tram = 11
+        roadSideUnit = 15
+
+    @abc.abstractmethod
+    def __init__(self, *args, **kwargs):
+        ...
+
+    @staticmethod
+    def station_id(uuid: str) -> int:
+        return int(
+            hashlib.sha256(uuid.encode()).hexdigest()[:6],
+            16,
+        )
+
+    def __getitem__(self, key):
+        return self._message[key]
+
+    def __setitem__(self, key, value):
+        self._message[key] = value
+
+    def __delitem__(self, key):
+        del self._message[key]
+
+    def to_json(self) -> str:
+        # Return the densest possible JSON sentence
+        return json.dumps(self._message, separators=(",", ":"))
+
+    @classmethod
+    def from_json(cls, msg_json: str):
+        """Create a new ITS message from a json sentence"""
+        # We should validate msg_json here before loading it
+        msg_py_obj = json.loads(msg_json)
+        # Create a raw ITS mesage
+        msg = cls(uuid=msg_py_obj["source_uuid"], gnss_report=GNSSReport(timestamp=0))
+        # And now just replace the bundled message with the origianl one
+        msg._message = msg_py_obj
+
+        return msg
